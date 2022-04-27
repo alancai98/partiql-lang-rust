@@ -31,6 +31,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+          components: rustfmt
       - name: Cargo Build 
         uses: actions-rs/cargo@v1
         with:
