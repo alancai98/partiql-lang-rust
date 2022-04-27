@@ -43,6 +43,7 @@ jobs:
           args: --verbose --workspace
       - name: Cargo Test of the conformance tests
         uses: actions-rs/cargo@v1
+        continue-on-error: true
         with:
           command: test
           args: --verbose --package partiql-conformance-tests --features "conformance_test"
