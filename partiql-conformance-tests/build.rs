@@ -5,6 +5,7 @@ use partiql_conformance_test_generator::util::{all_ion_files_in, dir_to_mods, St
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::{fs, io};
 
 /// TODO: once APIs are more stable, include documentation on what this build script is doing
@@ -53,11 +54,18 @@ fn main() -> io::Result<()> {
         .expect("mod.rs created in root test folder")
         .write_all(
             format!(
-                "#[cfg(feature = \"conformance_test\")]\n#[rustfmt::skip]\nmod {};\n",
+                "#[cfg(feature = \"conformance_test\")]\nmod {};\n",
                 sub_tests_dir
             )
             .as_bytes(),
         )
         .unwrap_or_else(|error| panic!("Failure when writing to file: {:?}", error));
+
+    Command::new("cargo")
+        .arg("fmt")
+        .arg("--verbose")
+        .arg("--")
+        .spawn()
+        .expect("cargo fmt of tests/ failed");
     Ok(())
 }
