@@ -77,3 +77,40 @@ jobs:
           # Adding comments to the PR requires the GITHUB_TOKEN secret.
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
+      - name: Cache cargo build
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+  conformance:
+    name: Check conformance
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: ./*
+          key: ${{ github.sha }}
+      - run: ls .
+      - name: Cargo Test of the conformance tests (can fail)
+        uses: actions-rs/cargo@v1
+        continue-on-error: true
+        with:
+          command: test
+          args: --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json > cargo_test_results.json
+      - run: cat cargo_test_results.json
+      - run: ./target/debug/generate_cts_report cargo_test_results.json ${GITHUB_SHA} cts_report.json
+      - name: Upload cts_report.json
+        uses: actions/upload-artifact@v3
+        with:
+          path: cts_report.json
