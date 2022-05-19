@@ -101,13 +101,13 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
-      - run: ls .
       - name: Cargo Test of the conformance tests (can fail)
         uses: actions-rs/cargo@v1
         continue-on-error: true
         with:
           command: test
-          args: --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json > cargo_test_results.json
+          args: --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json > ./cargo_test_results.json
+      - run: ls .
       - run: cat cargo_test_results.json
       - run: ./target/debug/generate_cts_report cargo_test_results.json ${GITHUB_SHA} cts_report.json
       - name: Upload cts_report.json
