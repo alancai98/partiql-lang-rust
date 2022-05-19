@@ -96,7 +96,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           override: true
       - uses: actions/cache@v2
         id: restore-build
@@ -106,11 +106,8 @@ jobs:
       # Run the conformance tests and save to a file
       - run: touch cargo_test_results.json
       - name: Cargo Test of the conformance tests (can fail)
-        uses: actions-rs/cargo@v1
         continue-on-error: true
-        with:
-          command: test
-          args: --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json > cargo_test_results.json
+        run: cargo test --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json > cargo_test_results.json
       - run: ls .
       - run: pwd
       - run: find . -name "cargo_test_results.json" -print
