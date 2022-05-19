@@ -107,10 +107,10 @@ jobs:
         continue-on-error: true
         with:
           command: test
-          args: --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json
+          args: --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json > cargo_test_results.json
       - run: ls .
       - run: pwd
-      - run: cat cargo_test_results.json
+      - run: find . -name "cargo_test_results.json" -print
       - run: ./target/debug/generate_cts_report cargo_test_results.json ${GITHUB_SHA} cts_report.json
       - name: Upload cts_report.json
         uses: actions/upload-artifact@v3
