@@ -102,7 +102,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
-      - run: echo hello > cargo_test_results.json
+      - run: touch cargo_test_results.json
       - name: Cargo Test of the conformance tests (can fail)
         uses: actions-rs/cargo@v1
         continue-on-error: true
@@ -112,6 +112,7 @@ jobs:
       - run: ls .
       - run: pwd
       - run: find . -name "cargo_test_results.json" -print
+      - run: cat cargo_test_results.json
       - run: ./target/debug/generate_cts_report cargo_test_results.json ${GITHUB_SHA} cts_report.json
       - name: Upload cts_report.json
         uses: actions/upload-artifact@v3
