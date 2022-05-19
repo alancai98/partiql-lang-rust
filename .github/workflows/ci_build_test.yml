@@ -85,11 +85,22 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - name: Cargo Test of the conformance tests (can fail)
+        uses: actions-rs/cargo@v1
+        continue-on-error: true
+        with:
+          command: test
+          args: --verbose --package partiql-conformance-tests --features "conformance_test" -- -Z unstable-options --format json > cargo_test_results.json
+      - run: ls .
+      - run: pwd
+      - run: find . -name "cargo_test_results.json" -print
+      - run: cat cargo_test_results.json
   conformance:
     name: Check conformance
     runs-on: ubuntu-latest
     needs: [build]
     steps:
+      # Pull down the cached `partiql-lang-rust` build
       - uses: actions/checkout@v2
       - name: Rust Toolchain
         uses: actions-rs/toolchain@v1
@@ -102,6 +113,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      # Run the conformance tests and save to a file
       - run: touch cargo_test_results.json
       - name: Cargo Test of the conformance tests (can fail)
         uses: actions-rs/cargo@v1
@@ -118,3 +130,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: cts_report.json
+
