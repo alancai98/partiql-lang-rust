@@ -102,6 +102,7 @@ jobs:
         with:
           path: ./*
           key: ${{ github.sha }}
+      - run: echo hello > cargo_test_results.json
       - name: Cargo Test of the conformance tests (can fail)
         uses: actions-rs/cargo@v1
         continue-on-error: true
