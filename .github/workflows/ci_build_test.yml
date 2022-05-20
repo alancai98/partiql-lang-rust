@@ -113,7 +113,46 @@ jobs:
       - run: find . -name "cargo_test_results.json" -print
       - run: cat cargo_test_results.json
       - run: ./target/debug/generate_cts_report cargo_test_results.json ${GITHUB_SHA} cts_report.json
+      # Upload conformance report for future runs
       - name: Upload cts_report.json
         uses: actions/upload-artifact@v3
         with:
           path: cts_report.json
+      # Download conformance report from `main` to create comparison report
+      - name: Download cts_report.json from `main` branch
+        uses: dawidd6/action-download-artifact@v2
+        id: download-report
+        continue-on-error: true
+        with:
+          workflow: ci_build_test.yml
+          branch: main
+      - name: backup case if download fails
+        if: ${{ steps.download-report.outcome == 'failure' }}
+        run: mkdir -p main-branch-report && cp -r ./partiql-conformance-tests/backup_conformance_report.json ./main-branch-report/cts_report.json
+      # Run conformance report comparison
+      - run: ./target/debug/generate_comparison_report ./main-branch-report/cts_report.json cts_test_report.json
+      - name: print markdown in run
+        run: cat cts-comparison-report.md >> $GITHUB_STEP_SUMMARY
+      - name: Find Comment
+        uses: peter-evans/find-comment@v2
+        id: fc
+        if: github.event_name == 'pull_request'
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Conformance
+      - id: get-comment-body
+        run: |
+          body="$(cat ./cts-comparison-report.md)"
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "::set-output name=body::$body"
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.get-comment-body.outputs.body }}
+          edit-mode: replace
