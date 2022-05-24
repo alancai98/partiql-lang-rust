@@ -117,6 +117,7 @@ jobs:
       - name: Upload cts_report.json
         uses: actions/upload-artifact@v3
         with:
+          name: main-branch-report
           path: cts_report.json
       # Download conformance report from `main` to create comparison report. If `main` has no report, use a backup
       # report (stored in partiql-conformance-tests/backup_conformance_report.json). Alternatively, we could consider
