@@ -308,6 +308,8 @@ impl Debug for List {
     }
 }
 
+//--TODO(Alan) -- what's the difference between PartialOrd and Ord -- mathematical partial ordering vs total ordering (not everything can be compared e.g. floating point)
+//(Alan) -- `partial_cmp` returns an ordering between `self` and `other` values if one exists
 impl PartialOrd for List {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         let mut l = self.0.iter();
@@ -329,6 +331,7 @@ impl PartialOrd for List {
     }
 }
 
+//(Alan) `cmp` returns an [`Ordering`] between `self` and `other`.
 impl Ord for List {
     fn cmp(&self, other: &Self) -> Ordering {
         let mut l = self.0.iter();
@@ -469,6 +472,7 @@ impl Hash for Bag {
 #[derive(Default, Eq, Clone)]
 pub struct Tuple(pub HashMap<String, Value>);
 
+//--TODO(Alan) -- what is this `impl` block for? -- turn static array (of N elems) into tuple; T: anything that can be turned into a value (anything that implements From/Into)
 impl<const N: usize, T> From<[(&str, T); N]> for Tuple
 where
     T: Into<Value>,
@@ -556,6 +560,7 @@ mod tests {
     use std::mem;
     use std::rc::Rc;
 
+    //--TODO(Alan) can these be deleted? what are they useful for?
     #[test]
     fn value_size() {
         println!("bool size: {}", mem::size_of::<bool>());

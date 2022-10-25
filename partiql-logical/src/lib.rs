@@ -30,10 +30,10 @@ pub enum PathComponent {
 #[derive(Debug)]
 #[allow(dead_code)] // TODO remove once out of PoC
 pub enum Expr {
-    Value(ValueExpr),
-    Bindings(BindingsToValueExpr),
-    BindingsToValue(BindingsToValueExpr),
-    ValueToBindings(ValueToBindingsExpr),
+    Value(ValueExpr),   // e.g. 2+3
+    Bindings(BindingsToValueExpr),  // <- should be Bindings(BindingsToBindings); e.g. where expr, order by, group by
+    BindingsToValue(BindingsToValueExpr),   // e.g. select value
+    ValueToBindings(ValueToBindingsExpr),   // from, unpivot
 }
 
 #[derive(Debug)]
@@ -66,7 +66,8 @@ pub enum BindingsExpr {
     Select(Select),
     Distinct(Distinct),
     GroupBy,
-    Output,
+    Output, //--TODO(Alan) why is Output modeled as a `BindingsExpr` -- signal to come out (marker/sentinel value)
+            //     value expr don't have notion yet; possible ValueExpr will have its own output marker
 }
 
 #[derive(Debug)]

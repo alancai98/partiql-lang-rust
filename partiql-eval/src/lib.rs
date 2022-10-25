@@ -18,7 +18,7 @@ mod tests {
     use std::collections::HashMap;
     use std::rc::Rc;
 
-    fn evaluate(logical: BindingsExpr, bindings: MapBindings<Value>) -> Bag {
+    fn evaluate(logical: BindingsExpr, bindings: MapBindings<Value>) -> Option<Value> {
         let output = Rc::new(RefCell::new(EvalOutputAccumulator::default()));
         let planner = plan::EvaluatorPlanner {
             output: output.clone(),
@@ -106,7 +106,7 @@ mod tests {
         // Plan for `SELECT DISTINCT firstName, (firstName || firstName) AS doubleName FROM customer WHERE balance > 0`
         let logical = BindingsExpr::From(logical::From {
             expr: ValueExpr::VarRef(BindingsName::CaseInsensitive("customer".into())),
-            as_key: "customer".to_string(),
+            as_key: "customer".to_string(), //(Alan) alias FROM source as itself when unspecified
             at_key: None,
             out: Box::new(BindingsExpr::Where(logical::Where {
                 expr: ValueExpr::BinaryExpr(

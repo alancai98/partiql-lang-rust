@@ -34,6 +34,7 @@ impl EvaluatorPlanner {
         }
     }
 
+    //--TODO(ALAN) so this converts from logical
     fn plan_bindings(&self, be: BindingsExpr) -> Box<dyn TupleSink> {
         match be {
             BindingsExpr::From(logical::From {
@@ -74,6 +75,7 @@ impl EvaluatorPlanner {
         }
     }
 
+    //--TODO(ALAN) so this converts from logical expressions to an evaluable expression
     fn plan_values(&self, ve: ValueExpr) -> Box<dyn EvalExpr> {
         match ve {
             ValueExpr::UnExpr(_, _) => todo!("{:?}", ve),

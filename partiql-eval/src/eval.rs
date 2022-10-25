@@ -1,5 +1,8 @@
 use crate::env::basic::MapBindings;
 use crate::env::Bindings;
+use partiql_value::{
+    partiql_bag,
+};
 use partiql_value::Value::{Boolean, Missing, Null};
 use partiql_value::{Bag, BindingsName, Tuple, Value};
 use std::cell::RefCell;
@@ -7,6 +10,8 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::rc::Rc;
 
+//--TODO(ALAN) `EvalContext` to contain other things in the future (e.g. function mapping evaluation mode behavior)?
+//      e.g. `EvalDistinct` stores the seen hashmap here rather than in the struct
 pub trait EvalContext {
     fn bindings(&self) -> &dyn Bindings<Value>;
 }
@@ -93,6 +98,7 @@ pub struct EvalBinopExpr {
 }
 
 // TODO we should replace this enum with some identifier that can be looked up in a symtab/funcregistry
+//--TODO(Alan) -- will ^ be done as part of which milestone? -- when/if we need to
 #[derive(Debug)]
 #[allow(dead_code)] // TODO remove once out of PoC
 pub enum EvalBinop {
@@ -177,6 +183,9 @@ impl EvalExpr for EvalPath {
     }
 }
 
+//////////////////////////
+// BindingExpr follow
+//////////////////////////
 #[derive(Debug)]
 pub struct EvalScan {
     pub expr: Box<dyn EvalExpr>,
@@ -229,6 +238,7 @@ impl TupleSink for EvalFrom {
     }
 }
 
+// --TODO(ALAN) what determines why a certain `Evaluable` implements both a `TupleSink` and a `ValueSink` -- depends on upcoming features (e.g. SELECT VALUE in subqueries)
 impl ValueSink for EvalFrom {
     #[inline]
     fn push_value(&mut self, value: Value, ctx: &dyn EvalContext) {
@@ -246,6 +256,8 @@ impl Evaluable for EvalFrom {
     }
 }
 
+// --TODO(ALAN) `EvalFromAt` to support `BY` in future? -- unsure where/how it's specified TODO: determine where it comes from
+//      Also, why are `EvalFrom` and `EvalFromAt` modeled as separate structs? -- make less ambiguous
 #[derive(Debug)]
 pub struct EvalFromAt {
     expr: Box<dyn EvalExpr>,
@@ -438,22 +450,36 @@ impl TupleSink for EvalDistinct {
     }
 }
 
+// --TODO(ALAN) actual output could be a binding or a tuple. What modeling would work best for this?
+//      a general enum for tuplesink/valuesink?
 #[derive(Default, Debug)]
 pub struct EvalOutputAccumulator {
-    pub output: Bag,
+    pub output: Option<Value>,  // could consider below (doesn't compile since other dependent functions
+    // haven't been changed to take in an `Option` type yet. Could consider modeling as an
+    // enum/struct for the three possible values (list, bag, value) or trait
 }
 
 impl TupleSink for EvalOutputAccumulator {
     #[inline]
     fn push_tuple(&mut self, bindings: Tuple, ctx: &dyn EvalContext) {
-        self.push_value(Value::Tuple(Box::new(bindings)), ctx);
+        let new_val = Value::Tuple(Box::new(bindings));
+        match &mut self.output {
+            None => { self.push_value( Value::Bag(Box::new(partiql_bag![new_val])), ctx) }
+            Some(v) => {
+                match v {
+                    Value::List(list) => { list.push(new_val) }
+                    Value::Bag(bag) => { bag.push(new_val) }
+                    _ => todo!("error")
+                }
+            }
+        }
     }
 }
 
 impl ValueSink for EvalOutputAccumulator {
     #[inline]
     fn push_value(&mut self, value: Value, _ctx: &dyn EvalContext) {
-        self.output.push(value);
+        std::mem::swap(&mut self.output, &mut Some(value));
     }
 }
 
