@@ -1518,7 +1518,6 @@ impl<'a, 'ast> Visitor<'ast> for AstToLogical<'a> {
                 return Traverse::Stop;
             }
         };
-        let mut exprs_to_replace: Vec<(String, ValueExpr)> = Vec::new();
 
         let mut exprs = HashMap::with_capacity(env.len() / 2);
         let mut iter = env.into_iter();
@@ -1543,18 +1542,14 @@ impl<'a, 'ast> Visitor<'ast> for AstToLogical<'a> {
                     return Traverse::Stop;
                 }
             };
-            for (alias, expr) in select_clause_exprs.iter() {
+            for (alias, expr) in select_clause_exprs.iter_mut() {
                 if *expr == value {
                     let new_binding_name = BindingsName::CaseSensitive(alias.clone());
                     let new_expr = ValueExpr::VarRef(new_binding_name);
-                    exprs_to_replace.push((alias.to_owned(), new_expr));
+                    *expr = new_expr;
                 }
             }
             exprs.insert(alias, value);
-        }
-
-        for (k, v) in exprs_to_replace {
-            select_clause_exprs.push((k, v));
         }
 
         let group_by: BindingsOp = BindingsOp::GroupBy(logical::GroupBy {

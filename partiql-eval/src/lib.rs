@@ -6,7 +6,6 @@ pub mod plan;
 #[cfg(test)]
 mod tests {
     use assert_matches::assert_matches;
-    use std::collections::HashMap;
 
     use crate::env::basic::MapBindings;
     use crate::plan;
